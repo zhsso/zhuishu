@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import requests
 import redis
 import os
+import json
 
 redisaddr = os.environ["REDIS_PORT_6379_TCP_ADDR"]
 redisport = os.environ["REDIS_PORT_6379_TCP_PORT"]
@@ -18,12 +19,14 @@ def searchQidian(keyword):
     for book in books:
         title = book.find(name='h4').find(name='a')
         url = "https://m.qidian.com/book/" + title['data-bid']
+        book_id = title['data-bid']
         title = title.text
         author = book.find(name='a', attrs={'class': 'name'}).text
         infos.append({
             'platform': 'qidian',
             'title': title,
             "url": url,
+            "book_id": book_id,
             "author": author
         })
     return infos
@@ -36,12 +39,14 @@ def searchZongheng(keyword):
     for book in books:
         title = book.find(name='h2', attrs={'class': 'tit'}).find('a')
         url = title['href']
+        book_id = json.loads(title['data-sa-d'])["book_id"]
         title = title.text
         author = book.find(name='div', attrs={'class': 'bookinfo'}).find(name='a').text
         infos.append({
             'platform': 'zongheng',
             'title': title,
             "url": url,
+            "book_id": book_id,
             "author": author
         })
     return infos
@@ -105,12 +110,17 @@ def fetchNewest(platform, bookId):
 def searchBook(name):
     infos = searchQidian(name)
     infos.extend(searchZongheng(name))
-    return dict(data = infos)
+    return json.dumps(infos)
 
-import json
+
 @route('/fetch/<platform>/<bookId>')
 def fetchBook(platform, bookId):
     infos = fetchNewest(platform, bookId)
-    return dict(data = infos)
+    return json.dumps(infos)
+
+@route('/mark/<platform>/<bookId>')
+def markBook(platform, bookId):
+    fetchNewest(platform, bookId)
+    return "done"
 
 run(host='0.0.0.0', port=8080, server='gevent')
