@@ -13,7 +13,8 @@ type Book struct {
 	URL      string `json:"url"`
 	Author   string `json:"author"`
 	id       int64
-	stop     bool
+	isStop   bool
+	users    map[int64]*User
 }
 
 func (b Book) String() string {
@@ -30,16 +31,44 @@ func (c Chapter) String() string {
 	return fmt.Sprintf("%s %s", c.Title, c.URL)
 }
 
+func newBook(BookID int64) *Book {
+	return &Book{}
+}
+
+func (b *Book) addUser(u *User) {
+	b.users[u.id] = u
+}
+
+func (b *Book) deleteUser(u *User) int {
+	delete(b.users, u.id)
+	return len(b.users)
+}
+
+func (b *Book) stop() {
+	b.isStop = true
+}
+
 // Start 一直获取更新
-func (b *Book) Start(c chan []Chapter) {
-	for b.stop != true {
+func (b *Book) start() {
+	for b.isStop != true {
 		select {
 		case <-time.After(10 * time.Minute):
-			b.refresh(c)
+			b.refresh()
 		}
 	}
 }
 
-func (b *Book) refresh(c chan []Chapter) {
-	c <- fetchBook(b.Platform, b.BookID)
+func (b *Book) refresh() {
+	chapters := fetchBook(b.Platform, b.BookID)
+	if len(chapters) != 0 {
+		go b.sync(chapters)
+	}
+}
+
+func (b *Book) sync(chapters []Chapter) {
+	for _, chapter := range chapters {
+		for _, user := range b.users {
+			user.sendChapter(b, chapter)
+		}
+	}
 }

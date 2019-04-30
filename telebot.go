@@ -9,22 +9,19 @@ import (
 
 // TeleBot 机器人接口
 type TeleBot struct {
-}
-
-func (t *TeleBot) run() {
-
+	bot *tgbotapi.BotAPI
 }
 
 func teleSearchBook(keyword string) string {
 	return keyword
 }
 
-func runBotServer() {
+func (t *TeleBot) run() {
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
 	if err != nil {
 		log.Panic(err)
 	}
-
+	t.bot = bot
 	bot.Debug = true
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
@@ -42,7 +39,7 @@ func runBotServer() {
 		if !update.Message.IsCommand() { // ignore any non-command Messages
 			continue
 		}
-		user := getUser(update.Message.Chat.ID)
+		user := userManager.getUser(update.Message.Chat.ID)
 		// Create a new MessageConfig. We don't have text yet,
 		// so we should leave it empty.
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
@@ -54,9 +51,17 @@ func runBotServer() {
 		case "list":
 			msg.Text = user.getBookListStr()
 		case "add":
-			msg.Text = user.addBook(update.Message.CommandArguments())
+			if user.addBook(update.Message.CommandArguments()) {
+				msg.Text = "添加成功"
+			} else {
+				msg.Text = "添加失败"
+			}
 		case "delete":
-			msg.Text = user.deleteBook(update.Message.CommandArguments())
+			if user.deleteBook(update.Message.CommandArguments()) {
+				msg.Text = "删除成功"
+			} else {
+				msg.Text = "删除失败"
+			}
 		default:
 			msg.Text = "I don't know that command"
 		}
