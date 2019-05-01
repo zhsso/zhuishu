@@ -27,19 +27,22 @@ func newUser(id int64) *User {
 func (u User) getBookListStr() string {
 	str := "关注列表"
 	for _, book := range u.books {
-		str = fmt.Sprintf("%s\n%d: %s(%s)", str, book.id, book.Title, book.Platform)
+		str = fmt.Sprintf("%s\n%d: %s(%s@%s)", str, book.id, book.Title, book.Author, book.Platform)
 	}
 	return str
 }
 
 func (u *User) loadBooks() {
 	bookIds := redisClient.SMembers(u.bookKey).Val()
-	for _, bookIDstr := range bookIds {
-		bookID, err := strconv.ParseInt(bookIDstr, 10, 64)
-		if err == nil {
-			book := bookManager.getBook(bookID)
-			if book != nil {
-				u.books[bookID] = book
+	if bookIds != nil {
+		for _, bookIDstr := range bookIds {
+			bookID, err := strconv.ParseInt(bookIDstr, 10, 64)
+			if err == nil {
+				book := bookManager.getBook(bookID)
+				if book != nil {
+					u.books[bookID] = book
+					book.addUser(u)
+				}
 			}
 		}
 	}
@@ -48,10 +51,13 @@ func (u *User) loadBooks() {
 func (u *User) addBook(bookIDStr string) bool {
 	bookID, err := strconv.ParseInt(bookIDStr, 10, 64)
 	if err != nil {
+		println(bookIDStr)
 		return false
 	}
 	//加进列表
-	if redisClient.SAdd(u.bookKey).Val() == 0 {
+	if redisClient.SAdd(u.bookKey, bookID).Val() == 0 {
+		println("sadd fail!")
+		println(u.bookKey)
 		return false
 	}
 
@@ -85,5 +91,5 @@ func (u *User) delete() {
 func (u *User) sendChapter(b *Book, c Chapter) {
 	msgTXT := fmt.Sprintf("%s: %s\n%s", b.Title, c.Title, c.URL)
 	msg := tgbotapi.NewMessage(u.id, msgTXT)
-	teleBot.bot.Send(msg)
+	teleBot.send(msg)
 }

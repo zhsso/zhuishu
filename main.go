@@ -15,9 +15,15 @@ func main() {
 	})
 
 	teleBot = &TeleBot{}
-	userManager = &UserManager{}
-	bookManager = &BookManager{}
+	userManager = newUserManager()
+	bookManager = newBookManager()
 
 	go teleBot.run()
+
+	bookManager.loadAll()
+	userManager.loadAll()
+
 	bookManager.run()
+	stop := make(chan bool)
+	<-stop
 }

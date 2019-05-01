@@ -11,8 +11,8 @@ func getCrawlerURL() string {
 	return "http://127.0.0.1:8080"
 }
 
-func searchBook(keyword string) []Book {
-	ret := make([]Book, 0)
+func searchBook(keyword string) []*Book {
+	ret := make([]*Book, 0)
 	url := fmt.Sprintf("%s/search/%s", getCrawlerURL(), keyword)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -26,6 +26,9 @@ func searchBook(keyword string) []Book {
 		return ret
 	}
 	json.Unmarshal(body, &ret)
+	for index, book := range ret {
+		ret[index] = bookManager.checkBook(book)
+	}
 	return ret
 }
 

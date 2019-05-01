@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -13,7 +14,15 @@ type TeleBot struct {
 }
 
 func teleSearchBook(keyword string) string {
-	return keyword
+	books := searchBook(keyword)
+	str := "搜索结果"
+	for _, book := range books {
+		if book == nil {
+			continue
+		}
+		str = fmt.Sprintf("%s\n%d: %s %s %s", str, book.id, book.Title, book.Author, book.Platform)
+	}
+	return str
 }
 
 func (t *TeleBot) run() {
@@ -65,9 +74,13 @@ func (t *TeleBot) run() {
 		default:
 			msg.Text = "I don't know that command"
 		}
+		t.send(msg)
+	}
+}
 
-		if _, err := bot.Send(msg); err != nil {
-			log.Panic(err)
-		}
+func (t *TeleBot) send(msg tgbotapi.MessageConfig) {
+	if _, err := t.bot.Send(msg); err != nil {
+		userID := msg.ChatID
+		userManager.deleteUser(userID)
 	}
 }

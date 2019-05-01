@@ -26,7 +26,7 @@ def searchQidian(keyword):
             'platform': 'qidian',
             'title': title,
             "url": url,
-            "book_id": book_id,
+            "book_id": int(book_id),
             "author": author
         })
     return infos
@@ -46,7 +46,7 @@ def searchZongheng(keyword):
             'platform': 'zongheng',
             'title': title,
             "url": url,
-            "book_id": book_id,
+            "book_id": int(book_id),
             "author": author
         })
     return infos
@@ -70,7 +70,7 @@ def fetchNewestQidian(bookId):
         for chapter in volume['cs']:
             chapters.append({
                 'title': chapter['cN'],
-                'url': "https://m.qidian.com/book/3602691/{0}".format(chapter['id'])
+                'url': "https://m.qidian.com/book/{0}/{1}".format(bookId, chapter['id'])
             })
     return chapters
 
