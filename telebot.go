@@ -28,7 +28,7 @@ func teleSearchBook(keyword string) string {
 func (t *TeleBot) run() {
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
 	if err != nil {
-		log.Panic(err)
+			log.Panic(err)
 	}
 	t.bot = bot
 	bot.Debug = true

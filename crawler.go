@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 func getCrawlerURL() string {
-	return "http://127.0.0.1:8080"
+	addr := os.Getenv("BOOK_PORT_8080_TCP_ADDR")
+	port := os.Getenv("BOOK_PORT_8080_TCP_PORT")
+	return fmt.Sprintf("http://%s:%s", addr, port)
 }
 
 func searchBook(keyword string) []*Book {
