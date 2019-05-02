@@ -39,6 +39,7 @@ func (b *BookManager) addBook(u *User, bookID int64) *Book {
 	}
 	book := newBook(bookID)
 	b.books[bookID] = book
+	book.addUser(u)
 	go book.start()
 	return book
 }
