@@ -99,6 +99,7 @@ func (b *Book) refresh() {
 	if len(b.users) > 0 {
 		if b.needMark {
 			markBook(b.Platform, b.BookID)
+			b.needMark = false
 		} else {
 			chapters := fetchBook(b.Platform, b.BookID)
 			if len(chapters) != 0 {
